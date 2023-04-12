@@ -1,0 +1,756 @@
+/* Styles for the Travel Report page */
+
+/* Health tab */
+/* Add padding for each expandable sections */
+summary.healthtabexpandablesection {
+    padding-left: 10px;
+}
+
+/* Add margin for each Related Travel Health Notices */
+.healthtabmargin {
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+/* Print Styles go here */
+@media print {
+
+    #wb-main-in a:after {
+        content: " ("attr(href) ") ";
+        font-size: 0.8em;
+        font-weight: normal;
+    }
+
+    .tr-help-abroad details details {
+        display: block !important;
+    }
+
+    .tr-country-tabs h2 {
+        font-size: 200% !important;
+        font-weight: normal !important;
+        margin: 0.5em 0;
+    }
+
+    h1.tr-title {
+        font-size: 220% !important;
+    }
+}
+
+/* Universal browser styles here (desktop and mobile) */
+@media screen {
+
+    h1.tr-title {
+        background: no-repeat transparent;
+        padding: 12px 0 0 61px;
+
+    }
+
+    .RegionalAdv h3,
+    .AvoidNonEssential h3,
+    .AvoidAll h3 {
+        color: #CC2E29;
+    }
+
+    div.AdvisoryContainer.AvoidAll {
+        background: url("/vt/images/taa/risklevels/do-not-travel.svg") no-repeat left top;
+        background-size: 50px 50px;
+        background-position: 0px -5px;
+        display: block;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    div.AdvisoryContainer.AvoidNonEssential {
+        background: url("/vt/images/taa/risklevels/reconsider-travel.svg") no-repeat left top;
+        background-size: 50px 50px;
+        background-position: 0px -5px;
+        display: block;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    div.AdvisoryContainer.ExHigh {
+        background: url("/vt/images/taa/risklevels/increased-caution.svg") no-repeat left top;
+        background-size: 50px 50px;
+        background-position: 0px -5px;
+        display: block;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    div.AdvisoryContainer.ExNormal {
+        background: url("/vt/images/taa/risklevels/normal-precautions.svg") no-repeat left top;
+        background-size: 50px 50px;
+        background-position: 0px -5px;
+        display: block;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    div.tr-share-links {}
+
+    div.tr-share-links ul {
+        margin: 0 10px;
+    }
+
+    div.tr-share-links ul li {
+        margin-right: 5px;
+    }
+
+    .span-no-bottom-margin {
+        margin-bottom: 5px !important;
+    }
+
+}
+
+
+/* Mobile-only styles go here */
+@media screen and (max-width:767px),
+screen and (max-device-width:767px) {
+
+    h2.tr-title {
+        padding: 8px 0 0 55px;
+    }
+
+    div.AdvisoryContainer.RegionalAdv,
+    div.AdvisoryContainer.AvoidAll,
+    div.AdvisoryContainer.AvoidNonEssential,
+    div.AdvisoryContainer.ExHigh,
+    div.AdvisoryContainer.ExNormal {
+        /*background-position: 0px 4px;*/
+        padding-left: 60px;
+    }
+
+    h2.tr-share-title {
+        margin-bottom: 0px;
+    }
+
+    div.tr-country-select {
+        display: none;
+    }
+
+    .h2-section-title {
+        padding-top: 0px !important;
+        position: relative !important;
+    }
+
+}
+
+/* Desktop-only styles go here */
+@media screen and (min-width:768px) and (min-device-width:768px) {
+
+    h2.tr-share-title {
+        margin-bottom: 10px;
+    }
+
+    *:focus {
+        outline: none !important;
+    }
+
+    h2.tr-title {
+        border-bottom: 0px;
+        margin-bottom: 5px !important;
+        margin-top: 5px !important;
+        padding: 8px 0 0 61px;
+
+    }
+
+    h1.tr-title2 {
+        border-bottom: 0px;
+        margin-bottom: 5px !important;
+        margin-top: 5px !important;
+        padding: 8px 0 0 0px;
+
+    }
+
+    .button {
+        margin: 0px 0px 4px 6px;
+    }
+
+    .divTravelReportPicker select {
+        width: 77%;
+        margin: 5px 0 5px 5px;
+    }
+
+    .divTravelReportPicker input[type=button] {
+        margin: 2px 0 0px;
+    }
+
+    /* Advisory Containers -> div.AdvisoryContainer.RegionalAdv, div.AdvisoryContainer.AvoidAll, div.AdvisoryContainer.AvoidNonEssential*/
+    div.AdvisoryContainer {
+        background-position: 4px 4px;
+        padding-left: 64px;
+        padding-right: 24px;
+    }
+
+    .tr-country-select select {
+        max-width: 80%;
+
+    }
+
+    .tr-country-select input[type=submit] {
+        max-width: 15%;
+
+    }
+
+    .tr-country-tabs .tabs-panel div section {
+        min-height: 300px;
+
+    }
+
+    .tr-country-tabs h2 {
+        /* imitating font-xxlarge */
+        font-size: 200% !important;
+        font-weight: normal !important;
+        margin: 0.5em 0;
+
+    }
+
+    .tr-country-tabs h3 {
+        margin-bottom: 0.5em;
+    }
+
+    /* Original CSS */
+
+    .embedded-grid,
+    .embedded-grid .tabs-panel {
+        border: 0;
+        padding: 0;
+    }
+
+    .green-text {
+        font-weight: bold;
+        color: #008348;
+    }
+
+    .red-text {
+        font-weight: bold;
+        color: #E41701;
+    }
+
+    .content_fixed {
+        padding: 0 0 0 80px;
+        position: relative;
+    }
+
+    .content_fixed img {
+        left: 0;
+        position: absolute;
+        top: 0;
+    }
+
+    input[type="button"],
+    input[type="reset"],
+    input[type="submit"] {
+        display: inline-block;
+    }
+
+    div.tr-top-section {}
+
+    .offices {
+        white-space: pre;
+        white-space: pre-wrap;
+        white-space: pre-line;
+        white-space: -pre-wrap;
+        white-space: -o-pre-wrap;
+        white-space: -moz-pre-wrap;
+        white-space: -hp-pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .tr-space {
+        padding-bottom: 5px;
+    }
+
+    .tabs-panel h2 {
+        font-size: 200% !important;
+    }
+
+
+    .tr-help-abroad p {
+        font-size: 85% !important;
+        padding: 1px 3px !important;
+        margin: 5px 0;
+    }
+
+}
+
+@media screen {
+
+    .health-tab .ha-label {
+        display: block;
+        font-size: 85% !important;
+        font-weight: bold;
+        margin-top: 2px;
+    }
+
+    .health-tab .ha-label:first-child {
+        margin-top: 0;
+    }
+
+    .health-tab .ha-text {
+        display: block;
+    }
+
+    .health-tab {
+        background-color: white;
+        border-left: thin solid #ddd;
+        border-right: thin solid #ddd;
+        border-bottom: thin solid #ddd;
+        margin-bottom: 0 !important;
+    }
+
+    .health-tab p {
+        margin-left: 10px;
+    }
+
+    .health-tab ul {
+        margin-top: 10px;
+    }
+
+    .health-tab h3 {
+        margin-left: 10px;
+    }
+
+    .health-tab summary {
+        margin-bottom: 5px;
+    }
+
+    .health-tab summary:hover,
+    .health-tab summary:focus {
+        background-color: #E8E8E8;
+
+    }
+
+    .health-tab div {
+        padding: 5px 10px 10px;
+    }
+
+    .health-tab-note {
+        background-color: white;
+        padding-left: 8%;
+        width: 92% !important;
+    }
+
+    .health-tab-note div {
+        padding: 6px;
+    }
+
+    .health-tab-note a[href^='http:'] {}
+
+
+}
+
+@media screen and (max-width:767px),
+screen and (max-device-width:767px) {
+
+    .health-tab summary,
+    .health-tab-note summary {
+        background-color: #f1f1f1;
+    }
+
+    .health-tab summary:hover,
+    .health-tab summary:focus,
+    .health-tab-note summary:hover,
+    .health-tab-note summary:focus {
+        background-color: #e5e5e5;
+    }
+}
+
+
+@media screen {
+
+    .ha-office .ha-label {
+        display: block;
+        font-size: 85% !important;
+        font-weight: bold;
+        margin-top: 2px;
+    }
+
+    .ha-office .ha-label:first-child {
+        margin-top: 0;
+    }
+
+    .ha-office .ha-text {
+        display: block;
+    }
+
+    .ha-office {
+        background-color: white;
+        border-bottom: thin solid #ddd;
+        margin-bottom: 0 !important;
+
+    }
+
+    .ha-office summary {
+        margin-bottom: 5px;
+    }
+
+    .ha-office summary:hover,
+    .ha-office summary:focus {
+        background-color: #E8E8E8;
+
+    }
+
+    .ha-has-internet {
+        /*background: transparent url('/vt/custom/images/website.gif') no-repeat 0 2px;
+        padding-left: 19px;*/
+    }
+
+    .ha-has-passport {
+        /*background: transparent url('/vt/custom/images/book.png') no-repeat 0 2px;
+        padding-left: 19px;*/
+    }
+
+
+    .ha-has-facebook {
+        /*background: transparent url('/vt/custom/images/sl_facebook.png') no-repeat 0 2px;
+        padding-left: 19px;*/
+    }
+
+    .ha-has-twitter {
+        /*background: transparent url('/vt/custom/images/sl_twitter2.png') no-repeat 0 2px;
+        padding-left: 19px;*/
+    }
+
+    .ha-office div {
+        padding: 5px 10px 10px;
+    }
+
+    .ha-office-note {
+        background-color: white;
+        padding-left: 8%;
+        width: 92% !important;
+    }
+
+    .ha-office-note summary {
+        /*color:#003366;*/
+    }
+
+    .ha-office-note summary:hover,
+    .ha-office-note summary:focus {
+        /*text-decoration: underline;*/
+
+    }
+
+    .ha-office-note div {
+        padding: 6px;
+    }
+
+    .ha-office-note a[href^='http:'] {}
+
+
+}
+
+@media screen and (max-width:767px),
+screen and (max-device-width:767px) {
+
+    .ha-office summary,
+    .ha-office-note summary {
+        background-color: #f1f1f1;
+    }
+
+    .ha-office summary:hover,
+    .ha-office summary:focus,
+    .ha-office-note summary:hover,
+    .ha-office-note summary:focus {
+        background-color: #e5e5e5;
+    }
+}
+
+
+/* IE fixes here */
+
+.ie7 h1.tr-title {
+    padding: 8px 0 0 55px;
+    border-bottom: 0px;
+    margin-bottom: 5px !important;
+    margin-top: 5px !important;
+}
+
+.ie7 .tr-country-select select {
+    width: 80%;
+}
+
+.ie7 div.AdvisoryContainer,
+.ie7 div.AdvisoryContainer.RegionalAdv,
+.ie7 div.AdvisoryContainer.AvoidAll,
+.ie7 div.AdvisoryContainer.AvoidNonEssential {
+    padding-left: 60px;
+}
+
+.ie7 #gcwu-connect li {
+    float: left;
+}
+
+@media print {
+    .wb-tabs details {
+        display: block !important;
+    }
+
+    #Label13 div {
+        display: block !important;
+    }
+}
+
+h2 {
+    border-bottom: 0 !important;
+}
+
+.wb-toggle {
+    text-decoration: none;
+}
+
+
+.dshbrd .cntrls a:hover {
+    background: #fff !important;
+    text-decoration: none;
+}
+
+.dshbrd .cntrls a:focus {
+    background: #fff !important;
+    text-decoration: none;
+}
+
+.tr-features {
+    margin-left: 5px;
+    margin-bottom: 10px;
+}
+
+.dl-horizontal dt {
+    Width: 200px;
+}
+
+.mrgnBttm4 {
+    margin-bottom: 4px;
+}
+
+/* New revisited CSS styles for the TAA optimization project */
+
+h2 {
+    border-bottom: 1px solid #00375E !important;
+}
+
+.tr-title {
+    padding-top: 5px !important;
+}
+
+.h2-section-title {
+    padding-top: 25px;
+    position: absolute;
+}
+
+/* Headers - START */
+.header-risk {
+    background: url('/vt/images/taa/Risk.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-risk h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+.header-help {
+    background: url('/vt/images/taa/Help.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-help h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+
+.header-safety {
+    background: url('/vt/images/taa/Safety.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-safety h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+.header-entry {
+    background: url('/vt/images/taa/Entry.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-entry h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+.header-health {
+    background: url('/vt/images/taa/Health.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-health h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+.header-laws {
+    background: url('/vt/images/taa/Laws.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-laws h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+.header-natural-disasters {
+    background: url('/vt/images/taa/Natural-Disasters.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-natural-disasters h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 5px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+.header-links {
+    background: url('/vt/images/taa/Links.svg') no-repeat left top;
+    background-size: 60px 60px;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.header-links h2 {
+    margin: 20px 0px 20px 65px;
+    padding: 15px 0px 10px 0px;
+    border-bottom: 1px solid #333333;
+}
+
+/* Headers - END */
+
+/* Top banners - START */
+.banner-do-not-travel {
+    background:  #E1261A !important;
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    padding-left: 40px;
+    margin-left: 30px;
+    margin-right: 15px;
+}
+
+.image-do-not-travel {
+    height: 48px;
+    width: 48px;
+    padding-top: 15px;
+    margin-top: 5px;
+    margin-left: 5px;
+    position: absolute;
+}
+
+.banner-reconsider-travel {
+    background:  #FA7822 !important;
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    padding-left: 40px;
+    margin-left: 30px;
+    margin-right: 15px;
+}
+
+.image-reconsider-travel {
+    height: 48px;
+    width: 48px;
+    padding-top: 15px;
+    margin-top: 5px;
+    margin-left: 5px;
+    position: absolute;
+}
+
+.banner-increased-caution {
+    background:  #FBE80C !important;
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    padding-left: 40px;
+    margin-left: 30px;
+    margin-right: 15px;
+}
+
+.image-increased-caution {
+    height: 48px;
+    width: 48px;
+    padding-top: 15px;
+    margin-top: 5px;
+    margin-left: 5px;
+    position: absolute;
+}
+
+.banner-normal-precautions {
+    background:  #00810C !important;
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    padding-left: 40px;
+    margin-left: 30px;
+    margin-right: 15px;
+}
+
+.image-normal-precautions {
+    height: 48px;
+    width: 48px;
+    padding-top: 15px;
+    margin-top: 5px;
+    margin-left: 5px;
+    position: absolute;
+}
+
+.banner-white > a:link,
+.banner-white > a:visited,
+.banner-white > a:hover,
+.banner-white > a:active {
+    text-decoration: none !important;
+    color: white !important;
+    font-weight: 700;
+}
+
+.banner-black > a:link,
+.banner-black > a:visited,
+.banner-black > a:hover,
+.banner-black > a:active {
+    text-decoration: none !important;
+    color: black !important;
+    font-weight: 700;
+}
+
+/* Top banners - END */
+
+.alert-item {
+    padding: 10px 10px 10px 10px;
+    border: 1px solid #ddd;
+    margin: 0 0 3px 0;
+}
+
+.side-need-help {
+    word-wrap: break-word;
+}
+
+.on-this-page {
+    margin-left: 0px !important;
+}

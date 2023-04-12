@@ -1,0 +1,829 @@
+(function() {
+  // Util
+  function createElement(tag, styles, parent, text, attributes) {
+    let styleString = "";
+    Object.keys(styles).map(key => {
+      styleString += `${key}: ${styles[key]} !important; `;
+    });
+
+    const element = document.createElement(tag);
+    element.setAttribute("style", styleString);
+
+    if (parent) {
+      parent.appendChild(element);
+    }
+
+    if (text) {
+      element.innerText = text;
+    }
+
+    if (attributes) {
+      Object.keys(attributes).map(attr => {
+        element.setAttribute(attr, attributes[attr]);
+      })
+    }
+
+    return element;
+  }
+
+  function loadScript(url, callback) {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+
+    if (script.readyState) {
+      //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == "loaded" || script.readyState == "complete") {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else {
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  }
+
+  loadScript("https://cdn.jsdelivr.net/npm/flatpickr", function() {
+    flatpickr(dateInput, {
+      disableMobile: "true",
+      dateFormat: "d/m/y",
+      defaultDate: startDate,
+      minDate: startDate,
+      maxDate: maxStartDate(),
+      onChange: function(dateObj, dateStr) {
+        startDate = new Date(dateObj);
+        let minEndDate = new Date(startDate);
+        minEndDate.setDate(minEndDate.getDate() + 4);
+        if (endDate <= minEndDate) {
+          endDate = minEndDate;
+        }
+        flatpickr(endDateInput, {
+          disableMobile: "true",
+          dateFormat: "d/m/y",
+          defaultDate: endDate,
+          minDate: minEndDate,
+
+          maxDate: maxEndDate(),
+          onChange: function(dateObj, dateStr) {
+            endDate = new Date(dateObj);
+            calculatePrice();
+          }
+        });
+        calculatePrice();
+      }
+    });
+
+    flatpickr(endDateInput, {
+      disableMobile: "true",
+      dateFormat: "d/m/y",
+      defaultDate: endDate,
+      minDate: endDate,
+      maxDate: maxEndDate(),
+      onChange: function(dateObj, dateStr) {
+        endDate = new Date(dateObj);
+        calculatePrice();
+      }
+    });
+  });
+
+  // Add datepicker assets to host site
+  const head = document.head || document.getElementsByTagName("head")[0];
+  const cleanSlateStylesheet = document.createElement("link");
+  cleanSlateStylesheet.setAttribute("rel", "stylesheet");
+  cleanSlateStylesheet.setAttribute(
+    "href",
+    "https://cdnjs.cloudflare.com/ajax/libs/cleanslate/0.10.1/cleanslate.min.css"
+  );
+  head.appendChild(cleanSlateStylesheet);
+
+  const datepickerStylesheet = document.createElement("link");
+  datepickerStylesheet.setAttribute("rel", "stylesheet");
+  datepickerStylesheet.setAttribute(
+    "href",
+    "https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+  );
+  head.appendChild(datepickerStylesheet);
+
+  let dateInput;
+  let endDateInput;
+
+  let today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  let endDate = new Date();
+  endDate.setHours(0, 0, 0, 0);
+  endDate.setDate(endDate.getDate() + 4);
+
+  const maxStartDate = () => {
+    let max = new Date(today);
+    max.setDate(max.getDate() + 179);
+
+    return max;
+  };
+
+  const maxEndDate = () => {
+    let max = new Date(startDate);
+    max.setDate(max.getDate() + 363);
+
+    return max;
+  };
+
+  // Widget state
+  let includingTravel = false;
+  let specificDates = false;
+
+  const AGE_GROUPS = [
+    {
+      value: "group2",
+      label: "0-39 years old",
+      price: 1.61,
+      addonUS: 1.37
+    },
+    {
+      value: "group3",
+      label: "40-49 years old",
+      price: 2.64,
+      addonUS: 2.27
+    },
+    {
+      value: "group4",
+      label: "50-59 years old",
+      price: 4.14,
+      addonUS: 3.94
+    },
+    {
+      value: "group5",
+      label: "60-69 years old",
+      price: 5.62,
+      addonUS: 5.41
+    }
+  ];
+
+  let selectedAge = AGE_GROUPS[0];
+
+  let price;
+  let weeks;
+  let numberOfDays;
+
+  // Select widget container from DOM
+  const container = document.querySelector(".safetywing-price-widget");
+  const affiliateId = container.dataset.safetywingaffiliateid;
+  const scale = Math.min(1.5, Number(container.dataset.scale ?? 1.0));
+  container.setAttribute("style", "font-family: 'Helvetica', 'Arial', sans-serif !important;");
+  container.style.setProperty("box-sizing", "border-box", "important");
+  container.style.setProperty("width","450px", "important");
+  container.style.setProperty("height", "480px", "important");
+  container.style.setProperty("display", "inline-block", "important");
+  container.style.setProperty("transform-origin", "top left", "important");
+
+  container.classList.add("cleanslate");
+
+  function responsive(x) {
+    if (x.matches && scale >= 0.7) {
+      // If media query matches and scale larger than default responsiveness
+      container.style.setProperty("transform", "scale(0.7)", "important");
+    } else {
+        container.style.setProperty("transform", `scale(${scale})`, "important");
+    }
+  }
+
+  const win = window.matchMedia("(max-width: 500px)");
+  responsive(win); // Call listener function at run time
+  win.addListener(responsive); // Attach listener function on state changes
+
+  // Change datepicker style
+  const css = `
+    .safetywing-flatpickr-mobile-enddate {
+      position: relative;
+      left: 32px;
+      width: 180px;
+      height: 34px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 9px;
+      outline: none;
+      text-indent: 8px;
+      display: none;
+    }
+
+    .safetywing-flatpickr-mobile-startdate {
+      display: inline-block;
+      width: 180px;
+      height: 34px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 9px;
+      outline: none;
+      text-indent: 8px;
+    }
+
+    .flatpickr-calendar {
+      width: 240px;
+      // height: 250px;
+      font-family: 'Helvetica', 'Arial', sans-serif !important;
+    }
+
+    .flatpickr-rContainer {
+      width: 240px;
+    }
+
+    .flatpickr-days {
+      width: 240px;
+    }
+
+    .flatpickr-day.selected {
+      background: #273c4a;
+      border-radius: 8px;
+      border-color: #273c4a;
+      font-weight: 700;
+    }
+
+    .flatpickr-day.selected:hover {
+      background: #273c4a;
+      border-color: #273c4a;
+    }
+
+    .flatpickr-day.today {
+      font-weight: 700;
+      border: none;
+    }
+
+    .flatpickr-day.today:hover {
+      background: #3A9D9E;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .flatpickr-day:hover {
+      background: #3A9D9E;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .flatpickr-months {
+      background: #273c4a;
+    }
+
+    .flatpickr-weekdays {
+      background: #273c4a;
+    }
+
+    .flatpickr-weekdays .flatpickr-weekday {
+      color: #fff;
+    }
+
+    .flatpickr-current-month {
+      color: #fff;
+    }
+
+    .flatpickr-monthDropdown-month {
+      color: black;
+    }
+
+    .flatpickr-months .flatpickr-next-month {
+      color: #fff;
+      fill: #fff;
+    }
+
+    .flatpickr-current-month .numInputWrapper {
+      display: none;
+    }
+
+    .flatpickr-months .flatpickr-prev-month {
+      color: #fff;
+      fill: #fff;
+    }
+
+    .dayContainer {
+      width: 240px;
+      max-width: 240px;
+      min-width: 240px;
+    }
+  `;
+  const style = document.createElement("style");
+
+  head.appendChild(style);
+  style.appendChild(document.createTextNode(css));
+
+  // Price calculation
+  function calculatePrice() {
+    const times = selectedAge.price;
+    let result;
+    if (specificDates) {
+      calculateDays();
+      if (includingTravel) {
+        result = (times + selectedAge.addonUS) * numberOfDays;
+      } else {
+        result = times * numberOfDays;
+      }
+    } else {
+      weeks.innerText = "/ 4 weeks (28 days)";
+      if (includingTravel) {
+        result = (times + selectedAge.addonUS) * 28;
+      } else {
+        result = times * 28;
+      }
+    }
+    price.innerText = parseFloat(result).toFixed(2);
+  }
+
+  function calculateDays() {
+    const d1 = startDate;
+    const d2 = endDate;
+    var total_days = (d1 - d2) / (1000 * 60 * 60 * 24);
+    numberOfDays = Math.abs(Math.round(total_days)) + 1;
+    weeks.innerText = `/ ${numberOfDays} days`;
+  }
+
+  // Widget sections
+  function renderHeader() {
+    const header = createElement(
+      "header",
+      {
+        "box-sizing": "border-box",
+        width: "450px",
+        height: "128px",
+        background: "#5CC6C7",
+        "border-top-right-radius": "10px",
+        "border-top-left-radius": "10px",
+        "box-shadow": "0 3px 6px rgba(0,0,0,0.16)",
+        display: "flex",
+        "align-items": "center",
+        "justify-content": "space-between"
+      },
+      container
+    );
+
+    const logo = createElement(
+      "div",
+      {
+        width: "135px",
+        height: "86px",
+        "margin-left": "22px"
+      },
+      header
+    );
+
+    logo.innerHTML =
+      "<svg id='Layer_1' data-name='Layer 1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 464.56 301.42'><defs><style>.cls-1{fill:#fff;}</style></defs><title>safety-wing-logo</title><path class='cls-1' d='M49,207.18l.54,23.13h-2a24,24,0,0,0-7-14C36.84,212.78,32.83,211,28.5,211a11,11,0,0,0-7.93,2.79,8.63,8.63,0,0,0-2.92,6.42,8,8,0,0,0,1,4.09,17.1,17.1,0,0,0,4.57,4.76,101.28,101.28,0,0,0,10.66,6q11.69,6,15.76,11.3a19.69,19.69,0,0,1,4,12.18,20.07,20.07,0,0,1-6.51,15q-6.51,6.27-16.53,6.27a25.86,25.86,0,0,1-5.94-.67,43.51,43.51,0,0,1-7-2.51,10.33,10.33,0,0,0-3.88-1,4.7,4.7,0,0,0-2.7,1,7.16,7.16,0,0,0-2.31,3.12H7V253.54H8.81q2.16,11,8.33,16.86t13.28,5.8a12.17,12.17,0,0,0,8.77-3.12,9.77,9.77,0,0,0,3.26-7.26,9.87,9.87,0,0,0-1.25-4.76,15,15,0,0,0-3.81-4.38,56.5,56.5,0,0,0-9-5.39q-9.09-4.66-13.07-7.94A24,24,0,0,1,9.18,236,18.81,18.81,0,0,1,7,227.14,19.22,19.22,0,0,1,12.89,213a20,20,0,0,1,14.73-5.83,24,24,0,0,1,6.29.82,30.89,30.89,0,0,1,5.62,2.28,13.06,13.06,0,0,0,4.64,1.66,2.55,2.55,0,0,0,2-.82,9.77,9.77,0,0,0,1.38-3.94Zm32.5,63.91q-8.4,7.73-15.08,7.72a8.7,8.7,0,0,1-6.53-2.68,9.28,9.28,0,0,1-2.61-6.73,13.43,13.43,0,0,1,4.52-9.85q4.52-4.38,19.7-11.64V243.1c0-3.62-.19-5.89-.57-6.83a5.45,5.45,0,0,0-2.14-2.46,6.18,6.18,0,0,0-3.53-1.05A8.8,8.8,0,0,0,70,234.25a2.62,2.62,0,0,0-1.27,2.15,4.52,4.52,0,0,0,1.37,2.66A6.64,6.64,0,0,1,72,243.3a5.8,5.8,0,0,1-1.79,4.28,6.43,6.43,0,0,1-4.69,1.76,7.32,7.32,0,0,1-5.18-1.94,6,6,0,0,1-2.09-4.56,10.81,10.81,0,0,1,2.8-7,17.5,17.5,0,0,1,7.81-5.14,30.47,30.47,0,0,1,10.41-1.8q6.53,0,10.33,2.9A13.39,13.39,0,0,1,94.54,238q.69,2.16.69,9.88v18.57a20.43,20.43,0,0,0,.24,4.12,2.5,2.5,0,0,0,.74,1.25,1.68,1.68,0,0,0,1.13.41c.85,0,1.72-.63,2.6-1.89l1.48,1.23a18.42,18.42,0,0,1-5.09,5.5,10.68,10.68,0,0,1-6,1.71,9.05,9.05,0,0,1-6.14-1.92A8.73,8.73,0,0,1,81.53,271.09Zm0-3.74v-16a28.92,28.92,0,0,0-8.84,7.77,9.74,9.74,0,0,0-1.92,5.58,6,6,0,0,0,1.62,4.15,4.37,4.37,0,0,0,3.44,1.38Q78.29,270.22,81.53,267.35Zm40.15-32v33.21q0,4.82,1,6,1.57,1.89,5.8,1.74v1.84H101.4v-1.84a10.48,10.48,0,0,0,4.39-.75,3.74,3.74,0,0,0,1.8-1.91,17.05,17.05,0,0,0,.49-5.12V235.32H101.4v-5h6.68v-3.53l0-2.41a16.21,16.21,0,0,1,5.18-12.28q5.17-4.91,14-4.91c4,0,7,.79,9,2.35s2.92,3.31,2.92,5.22a5.25,5.25,0,0,1-1.81,4,6.78,6.78,0,0,1-4.82,1.69,5.75,5.75,0,0,1-4-1.38,4.09,4.09,0,0,1-1.49-3.07,11.31,11.31,0,0,1,.29-1.89,7.56,7.56,0,0,0,.2-1.64,2,2,0,0,0-.59-1.59,2.66,2.66,0,0,0-1.92-.76,2.93,2.93,0,0,0-2.38,1.22,6.45,6.45,0,0,0-1,3.94l.1,9v6.09h6.78v5ZM169,252.51H143.81q.45,9.53,4.86,15.05a10.14,10.14,0,0,0,8.16,4.24,9,9,0,0,0,5.35-1.71,21.52,21.52,0,0,0,5.16-6.17l1.66,1.13q-3.72,7.93-8.25,11.23a17.26,17.26,0,0,1-10.46,3.3q-10.22,0-15.47-8.19-4.22-6.6-4.22-16.37,0-12,6.21-19.06t14.56-7.09q7,0,12.11,6T169,252.51Zm-12.08-3.42q0-8.25-.86-11.31a9.33,9.33,0,0,0-2.67-4.66,4,4,0,0,0-2.75-.92,4.8,4.8,0,0,0-4.18,2.61q-2.9,4.56-2.89,12.48v1.8ZM188,212.81v17.5H199v5.06H188V264.9a23.07,23.07,0,0,0,.37,5.34,4,4,0,0,0,1.3,1.95,2.89,2.89,0,0,0,1.72.74q3.19,0,6-5.07L199,269q-4,9.83-12.92,9.82a11.62,11.62,0,0,1-11.25-8.18q-.5-1.74-.49-9.42V235.37h-6v-1.79A63.14,63.14,0,0,0,178.83,224a58,58,0,0,0,7.59-11.2Zm31.42,67.28-14.84-35.46q-3.33-8-4.93-9.87a8.4,8.4,0,0,0-3.86-2.56v-1.89h24.41v1.89a5.54,5.54,0,0,0-3.39,1,2.72,2.72,0,0,0-1,2.1q0,1.95,2.46,7.68l7.85,18.72,5.36-14.48q2.9-7.73,2.89-10.74a4,4,0,0,0-1.2-3c-.8-.75-2.22-1.16-4.25-1.23v-1.89h15.37v1.89a5.68,5.68,0,0,0-3.68,1.82q-1.42,1.56-4.76,10.61l-13.12,35.46q-4.95,13.31-7.36,16.38a10.41,10.41,0,0,1-8.5,4.29,9.11,9.11,0,0,1-6.6-2.43,7.81,7.81,0,0,1-2.53-5.86,7.11,7.11,0,0,1,1.74-4.91,5.57,5.57,0,0,1,4.3-1.94,5.07,5.07,0,0,1,3.95,1.64,7.46,7.46,0,0,1,1.55,5.06,5.33,5.33,0,0,0,.44,2.51,1.3,1.3,0,0,0,1.13.56,3.57,3.57,0,0,0,2.5-1.48q2-2.16,4.62-9.83Zm127.26-71.32v1.89a6.13,6.13,0,0,0-3.15,1.07,8,8,0,0,0-2.26,2.82q-.29.62-3.09,7.93l-20.87,57.25h-1.92L298.93,235l-18.17,44.72h-1.82L257,223.09q-3.35-8.53-4.66-10.33a6,6,0,0,0-4.47-2.1v-1.89h28.87v1.89c-2.32.07-3.87.43-4.64,1.1a3.13,3.13,0,0,0-1.15,2.48c0,1.3.8,4,2.4,8.24l13.07,33.67,10.46-26.3-2.75-7.37a56.41,56.41,0,0,0-3.49-8.06,7.76,7.76,0,0,0-2.82-2.89,10.06,10.06,0,0,0-4.69-.87v-1.89h32.26v1.89a17,17,0,0,0-4.86.56,3.19,3.19,0,0,0-1.62,1.2,3.33,3.33,0,0,0-.59,1.92c0,.79.74,3.19,2.21,7.22l12.13,32.85,10.85-29.73a65.59,65.59,0,0,0,2.12-6.29,14,14,0,0,0,.39-3.13,4.17,4.17,0,0,0-1.38-3.3c-.91-.8-2.67-1.23-5.25-1.3v-1.89Zm15.45,21.54v37.91c0,3.38.37,5.54,1.13,6.47s2.22,1.48,4.42,1.62v1.84h-24.8v-1.84a5.86,5.86,0,0,0,4.51-1.85q1-1.17,1-6.24V240.28q0-5.06-1.13-6.47c-.76-.94-2.21-1.47-4.37-1.61v-1.89Zm-6.88-23.18a7.16,7.16,0,0,1,5.4,2.33,7.81,7.81,0,0,1,2.21,5.6,7.73,7.73,0,0,1-2.23,5.58,7.24,7.24,0,0,1-5.38,2.3,7.16,7.16,0,0,1-5.35-2.3,8.17,8.17,0,0,1,0-11.18A7.11,7.11,0,0,1,355.29,207.13ZM386,230.31v6.19a27.3,27.3,0,0,1,6.77-5.81,14.09,14.09,0,0,1,7-1.82,10.83,10.83,0,0,1,7.41,2.59,12.37,12.37,0,0,1,3.93,6.42q.79,2.91.79,11.21v18.62c0,3.68.32,6,1,6.88s2,1.48,4,1.72v1.84H393.63v-1.84a4.8,4.8,0,0,0,3.73-2.26q.79-1.28.79-6.34V246.42a36.55,36.55,0,0,0-.44-7.41,4.58,4.58,0,0,0-1.5-2.38,3.62,3.62,0,0,0-2.33-.85q-4.23,0-7.86,6.3v25.63q0,5.37,1,6.81a4.82,4.82,0,0,0,3.56,1.79v1.84H367.31v-1.84a5.64,5.64,0,0,0,4.12-1.95q.84-1.12.84-6.65v-27q0-5.41-1-6.75c-.64-.89-2-1.47-4-1.74v-1.89Zm61.71.56H463.2v5.63h-8.79a17.41,17.41,0,0,1,3.34,4.55,14.51,14.51,0,0,1,1.18,5.78,14.7,14.7,0,0,1-2.73,8.88,18.2,18.2,0,0,1-7.41,5.89,20.69,20.69,0,0,1-8.33,2.12l-5.89-.26a5.05,5.05,0,0,0-3.71,1.51,4.94,4.94,0,0,0-1.49,3.61,3.8,3.8,0,0,0,1.35,3,6.64,6.64,0,0,0,4.39,1.18l8.5-.11q10.31,0,14.19,2.36,5.55,3.27,5.55,10.08a13.23,13.23,0,0,1-2.55,7.9,15.15,15.15,0,0,1-6.73,5.25,39.51,39.51,0,0,1-14.59,2.5,47.14,47.14,0,0,1-11.29-1.25q-5.12-1.26-7.32-3.48a6.62,6.62,0,0,1-2.21-4.68,6.1,6.1,0,0,1,1.69-4.22c1.13-1.25,3.24-2.3,6.31-3.15q-6.37-3.27-6.38-9.11a11,11,0,0,1,2.6-6.85,20.71,20.71,0,0,1,8.25-5.78q-6.57-2.52-9.52-6.61a15.71,15.71,0,0,1-2.95-9.46,16.1,16.1,0,0,1,5.5-12.15q5.5-5.15,14.14-5.15A24.76,24.76,0,0,1,447.73,230.87Zm-11.39,54.34q-5,0-6.63.87a4.8,4.8,0,0,0-2.8,4.3c0,1.74,1,3.31,2.9,4.73s5.56,2.12,10.9,2.12q6.82,0,10.73-1.89c2.6-1.26,3.9-3,3.9-5.32a3.22,3.22,0,0,0-.73-2.15,7.08,7.08,0,0,0-4-2.1Q447.93,285.21,436.34,285.21Zm2.9-53.16c-1.9,0-3.51,1-4.82,3s-2,6.13-2,12.41q0,7.62,1.94,10.46c1.29,1.9,2.82,2.84,4.59,2.84a5.82,5.82,0,0,0,4.91-2.81q2-2.82,2-10.95,0-9.17-2.21-12.49A5,5,0,0,0,439.24,232.05Z'/><path class='cls-1' d='M239.83,189.09c-4.68-4-16.44-16.5-17.34-18.62-3.64-8.16-5.64-17.21-1.93-29.29-.14.09-.28.18-.41.28-2.33,3.67-5.89,7.52-11.36,12.16a76.09,76.09,0,0,1,3.86-10.72c-4.47-17.32-1.8-47.29-2.45-62.61A21.45,21.45,0,0,1,200,81.38a39.44,39.44,0,0,0,10.05-4.57c8.52-42.12,4-66.92-3.72-73.92-13.53-3.74-40.92-1.51-55.21,44.22,3.2,15.4,9.37,22.43,21,30.67-12.43-2-19.64-11.14-24.57-23.56-4.21,14.7-5.24,41.36,6.32,62a71.65,71.65,0,0,0,26.65,6.65,47.13,47.13,0,0,1-24.15-.86c14.26,30.3,37.46,43.52,53.06,50.62a26.44,26.44,0,0,1,5.16,3.28q-3.72-4.35-7.12-9a123.89,123.89,0,0,1-20-41.31,150.75,150.75,0,0,1-4.83-43.75A255.78,255.78,0,0,1,188,39.93a4.12,4.12,0,0,1,5.59-3,5.58,5.58,0,0,1,3.75,6.12.64.64,0,0,1,0,.07l0,.13a243.9,243.9,0,0,0-6.08,40.11,141.24,141.24,0,0,0,3.66,41.21,114.75,114.75,0,0,0,17.94,38.8c8.38,12,18.84,22.62,30.17,32.21a3.13,3.13,0,0,1,.72,4.23,2.57,2.57,0,0,1-2.74.82c3.61,2.12,5.89,2,5.89,2S252.43,199.75,239.83,189.09Z'/></svg>";
+
+    const slogan = createElement(
+      "div",
+      {
+        color: "#ffffff",
+        "font-weight": "bold",
+        "font-size": "24px",
+        width: "44%",
+        "line-height": "28px",
+        "margin-right": "22px"
+      },
+      header,
+      "Insurance that covers you wherever you go."
+    );
+  }
+
+  function renderMain() {
+    function renderCheckboxSlider(text, state, moreInfoText, infoWidth) {
+      const checkboxSliderWrapper = createElement(
+        "div",
+        {
+          "margin-top": "16.5px",
+          display: "inline-flex"
+        },
+        main
+      );
+
+      const checkboxSliderToggle = createElement(
+        "button",
+        {
+          width: "47px",
+          height: "16px",
+          margin: "0",
+          border: "none",
+          outline: "none",
+          background: "#C4C4C4",
+          "border-radius": "9px",
+          position: "relative",
+          cursor: "pointer",
+          display: "block",
+          padding: "0",
+          "text-align": "left"
+        },
+        checkboxSliderWrapper
+      );
+
+      const checkboxSliderItem = createElement(
+        "span",
+        {
+          background: "#ffffff",
+          "border-radius": "50%",
+          width: "23px",
+          height: "23px",
+          position: "absolute",
+          bottom: "-3.5px",
+          left: "auto",
+          transition: "1s",
+          cursor: "pointer"
+        },
+        checkboxSliderToggle
+      );
+
+      const checkboxSliderLabel = createElement(
+        "label",
+        {
+          color: "#ffffff",
+          "font-size": "16px",
+          "margin-left": "8px"
+        },
+        checkboxSliderWrapper,
+        text
+      );
+
+      const checkboxInfoToggle = createElement(
+        "div",
+        {
+          position: "relative",
+          background: "#ffffff",
+          "border-radius": "50%",
+          width: "18px",
+          height: "18px",
+          "text-align": "center",
+          color: "#273C49",
+          "font-size": "16px",
+          "font-weight": "bold",
+          "margin-left": "10px",
+          cursor: "default"
+        },
+        checkboxSliderWrapper,
+        "?"
+      );
+
+      checkboxInfoToggle.onclick = function(e) {
+        e.stopPropagation();
+      };
+
+      const checkboxInfo = createElement(
+        "div",
+        {
+          display: "none",
+          position: "absolute",
+          width: infoWidth,
+          height: "auto",
+          background: "#EDAD68",
+          bottom: "-18px",
+          left: "28px",
+          "border-radius": "5px",
+          "box-shadow": "0 3px 6px rgba(0,0,0,0.16)",
+          "font-size": "14px",
+          padding: "9px",
+          "font-weight": "400",
+          "text-align": "left",
+          "line-height": "16px"
+        },
+        checkboxInfoToggle,
+        moreInfoText
+      );
+
+      checkboxInfo.onclick = function() {
+        checkboxInfo.style.setProperty("display", "none", "important");
+        checkboxInfo.style.setProperty("background", "#ffffff", "important");
+      };
+
+      checkboxInfoToggle.onmouseover = function() {
+        checkboxInfo.style.setProperty("display", "block", "important");
+        checkboxInfo.style.setProperty("background", "#EDAD68", "important");
+      };
+
+      checkboxInfoToggle.onmouseout = function() {
+        checkboxInfo.style.setProperty("display", "none", "important");
+        checkboxInfo.style.setProperty("background", "#ffffff", "important");
+      };
+
+      return checkboxSliderWrapper;
+    }
+
+    renderCheckboxSlider.state = {
+      checked: true
+    };
+
+    const main = createElement(
+      "main",
+      {
+        "box-sizing": "border-box",
+        width: "440px",
+        height: "267px",
+        background: "#273C49",
+        margin: "0 5px",
+        padding: "24px"
+      },
+      container
+    );
+
+    // Age range
+    const ageLabel = createElement(
+      "label",
+      {
+        color: "#ffffff",
+        "font-size": "16px"
+      },
+      main,
+      "Age range"
+    );
+
+    const ageSelect = createElement(
+      "select",
+      {
+        display: "block",
+        width: "180px",
+        height: "34px",
+        "border-radius": "5px",
+        "margin-top": "9px",
+        outline: "none",
+        border: "none",
+        background: "#ffffff"
+      },
+      main
+    );
+
+    ageSelect.onchange = function() {
+      selectedAge = AGE_GROUPS.find(o => o.label === ageSelect.value);
+      calculatePrice();
+    };
+
+    AGE_GROUPS.map(option => {
+      const elem = createElement("option", {}, ageSelect, option.label);
+      elem.setAttribute("value", option.label);
+      if (option.label === "0-39 years old") {
+        elem.setAttribute("selected", true);
+      }
+      return elem;
+    });
+
+    // Including travel in US toggle
+    const includingTravelSlider = renderCheckboxSlider(
+      "Including travel in the US",
+      includingTravel,
+      "Coverage that includes travel to the US and US territories. Not applicable to US citizens.",
+      "110px"
+    );
+
+    includingTravelSlider.onclick = function() {
+      includingTravel = !includingTravel;
+      includingTravelSlider
+        .querySelector("button")
+        .style.setProperty(
+          "background",
+          includingTravel ? "#65E87E" : "#C4C4C4",
+          "important"
+        );
+
+      includingTravelSlider
+        .querySelector("button span")
+        .style.setProperty(
+          "right",
+          includingTravel ? "0" : "auto",
+          "important"
+        );
+      // Update price
+      calculatePrice();
+    };
+
+    // Travel dates toggle
+    const specificDatesSlider = renderCheckboxSlider(
+      "Specific travel dates",
+      specificDates,
+      "When you choose set travel dates instead of a subscription, you pay for the whole trip upfront. Minimum 5 days, maximum 364 days.",
+      "140px"
+    );
+
+    specificDatesSlider.onclick = function() {
+      specificDates = !specificDates;
+      endDateInput.style.setProperty(
+        "display",
+        specificDates ? "inline-block" : "none",
+        "important"
+      );
+      const mobileEndDate = document.querySelectorAll(
+        ".safetywing-flatpickr-mobile-enddate"
+      )[1];
+      if (mobileEndDate) {
+        mobileEndDate.style.setProperty(
+          "display",
+          specificDates ? "inline-block" : "none",
+          "important"
+        );
+      }
+      endDateLabel.style.setProperty(
+        "display",
+        specificDates ? "inline-block" : "none",
+        "important"
+      );
+      specificDatesSlider
+        .querySelector("button")
+        .style.setProperty(
+          "background",
+          specificDates ? "#65E87E" : "#C4C4C4",
+          "important"
+        );
+      specificDatesSlider
+        .querySelector("button span")
+        .style.setProperty("right", specificDates ? "0" : "auto", "important");
+
+      calculatePrice();
+    };
+
+    const dateContainer = createElement(
+      "div",
+      { display: "flex", "margin-top": "20px" },
+      main
+    );
+
+    const startDateContainer = createElement("div", {}, dateContainer);
+    const endDateContainer = createElement(
+      "div",
+      { "margin-left": "32px" },
+      dateContainer
+    );
+    // Datepicker
+    const dateLabel = createElement(
+      "label",
+      {
+        color: "#ffffff",
+        "font-size": "16px",
+        display: "block"
+      },
+      startDateContainer,
+      "Start date"
+    );
+
+    dateInput = createElement(
+      "input",
+      {
+        display: "inline-block",
+        width: "180px",
+        height: "34px",
+        border: "none",
+        "border-radius": "5px",
+        "margin-top": "9px",
+        outline: "none",
+        "text-indent": "8px",
+        "font-family": "'Helvetica', 'Arial', sans-serif"
+      },
+      startDateContainer
+    );
+
+    dateInput.classList.add("safetywing-flatpickr-mobile-startdate");
+
+    const endDateLabel = createElement(
+      "label",
+      {
+        color: "#ffffff",
+        "font-size": "16px",
+        display: "none",
+        "margin-left": "32px"
+      },
+      endDateContainer,
+      "End date"
+    );
+
+    endDateInput = createElement(
+      "input",
+      {
+        position: "relative",
+        left: "32px",
+        width: "180px",
+        height: "34px",
+        border: "none",
+        "border-radius": "5px",
+        "margin-top": "9px",
+        outline: "none",
+        "text-indent": "8px",
+        display: "none",
+        "font-family": "'Helvetica', 'Arial', sans-serif"
+      },
+      endDateContainer
+    );
+
+    endDateInput.classList.add("safetywing-flatpickr-mobile-enddate");
+  }
+
+  function renderFooter() {
+    const footer = createElement(
+      "footer",
+      {
+        "box-sizing": "border-box",
+        width: "450px",
+        height: "85px",
+        background: "#5CC6C7",
+        "border-bottom-right-radius": "10px",
+        "border-bottom-left-radius": "10px",
+        "box-shadow": "0 3px 6px rgba(0,0,0,0.16)",
+        display: "flex",
+        "align-items": "center",
+        "justify-content": "space-between"
+      },
+      container
+    );
+
+    const priceWrapper = createElement(
+      "div",
+      {
+        width: "auto",
+        display: "flex",
+        "margin-left": "23px",
+        "margin-top": "5px"
+      },
+      footer
+    );
+
+    const dollar = createElement(
+      "div",
+      {
+        "font-size": "30px",
+        color: "#ffffff",
+        "line-height": "35px",
+        "font-weight": "bold",
+        "margin-right": "3px"
+      },
+      priceWrapper,
+      "$"
+    );
+
+    price = createElement(
+      "div",
+      {
+        "font-size": "40px",
+        color: "#ffffff",
+        "line-height": "55px",
+        "font-weight": "bold"
+      },
+      priceWrapper,
+      "42.00"
+    );
+
+    weeks = createElement(
+      "div",
+      {
+        color: "#ffffff",
+        "font-size": "16px",
+        "line-height": "20px",
+        width: "68px",
+        "margin-top": "5px",
+        "margin-left": "9px"
+      },
+      priceWrapper,
+      "/ 4 weeks (28 days)"
+    );
+
+    const button = createElement(
+      "a",
+      {
+        border: "none",
+        outline: "none",
+        "font-weight": "bold",
+        "border-radius": "5px",
+        "font-size": "20px",
+        "letter-spacing": "-0.72",
+        cursor: "pointer",
+        "box-shadow": "10px 10px 31px -18px rgba(0, 0, 0, 0.75)",
+        background: "rgb(240, 208, 105)",
+        color: "rgb(39, 60, 74)",
+        width: "152px",
+        height: "39px",
+        "margin-right": "23px",
+        "text-align": "center",
+        "line-height": "39px",
+        "text-decoration": "none"
+      },
+      footer,
+      "Buy now",
+      {
+        target: "_blank"
+      }
+    );
+
+    button.setAttribute("href", `https://safetywing.com/a/${affiliateId}`);
+
+    button.onmouseover = function() {
+      button.style.setProperty("background", "rgb(255, 233, 184)", "important");
+    };
+
+    button.onmouseout = function() {
+      button.style.setProperty("background", "rgb(240, 208, 105)", "important");
+    };
+
+    calculatePrice();
+  }
+
+  // Render widget
+  renderHeader();
+  renderMain();
+  renderFooter();
+})();

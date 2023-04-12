@@ -1,0 +1,52 @@
+(function (){
+    var qs_param = 'qs_sesref=';
+
+    function findLink(el) {
+        if (el.tagName == 'A' && el.href) {
+            return el;
+        } else if (el.parentElement) {
+            return findLink(el.parentElement);
+        } else {
+            return null;
+        }
+    };
+
+    function qsTagLink(e) {
+        var e = window.e || e;
+
+        const link = findLink(e.target);
+        if (link == null) { return; }
+
+        var should_tag      = false;
+        var qslink_patterns = ['/cgi/r?','qsoffer'];
+        var all_patterns    = (typeof qs_sesref_tag_urls_with != 'undefined' && Array.isArray(qs_sesref_tag_urls_with))
+            ? qslink_patterns.concat(qs_sesref_tag_urls_with)
+            : qslink_patterns;
+
+        for (var i = 0; i < all_patterns.length; i++) {
+            if (link.href.indexOf(all_patterns[i]) > -1 && all_patterns[i].trim() !== '') {
+              should_tag = true;
+            }
+        }
+
+        if (should_tag && link.href.indexOf(qs_param) == -1) {
+            if (link.href.indexOf(qslink_patterns[0]) > -1) {
+                link.href += ';';
+            } else if (link.href.indexOf('?') > -1) {
+                link.href += '&';
+            } else {
+                link.href += '?';
+            }
+            link.href += qs_param + encodeURIComponent(window.location);
+        }
+    }
+
+    if (document.addEventListener) {
+        document.addEventListener('click', qsTagLink, false);
+    } else {
+        document.attachEvent('onclick', qsTagLink);
+    }
+})()
+
+// Test script from console: var s=document.createElement("script"); s.async=true; s.src="https://dev.cardratings.com/js/qs_sesref.js";document.getElementsByTagName("head")[0].appendChild(s);
+// Always minify after changes @ https://beautifytools.com/javascript-minifier.php

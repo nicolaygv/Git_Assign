@@ -1,0 +1,1 @@
+!function(){var s="natgeo-kids-en-us.kids",a="webpackChunknatgeo";(self[a]=self[a]||[]).push([[s],{1854:(s,a,e)=>{__EDITION_CONFIG__=e(412)},1853:(a,e,n)=>{var o=n(1854);n(88).load(s,o),a.exports=o}},s=>{var a=a=>s(s.s=a);a(0),a(1853)}])}();
